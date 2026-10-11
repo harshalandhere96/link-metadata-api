@@ -43,3 +43,17 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t link-metadata-api:${{ github.sha }} .
+
+  deploy:
+    name: Trigger cloud deployment
+    needs: [test, build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Render deployment
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          curl --fail --silent --show-error \
+            --request POST "$DEPLOY_HOOK_URL"
